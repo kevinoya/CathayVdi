@@ -1,4 +1,7 @@
-﻿using System;
+﻿using DocumentFormat.OpenXml.Packaging;
+using DocumentFormat.OpenXml.Wordprocessing;
+using DocumentFormat.OpenXml;
+using System;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
@@ -20,6 +23,9 @@ class Program
 
         // 6. 取得 MAC 位址
         CaptureMacAddress();
+
+        //產出Word
+        CreateWord();
     }
 
     static void CaptureSystemVersion()
@@ -199,5 +205,143 @@ class Program
         public int Top;
         public int Right;
         public int Bottom;
+    }
+
+    static void CreateWord()
+    {
+        // 創建或打開一個 Word 文件
+        string filePath = "00587992.docx";
+        // 創建 Word 文件
+        using (WordprocessingDocument wordDoc = WordprocessingDocument.Create(filePath, WordprocessingDocumentType.Document))
+        {
+            // 添加主要部分
+            MainDocumentPart mainPart = wordDoc.AddMainDocumentPart();
+            mainPart.Document = new Document();
+
+            // 初始化 Body
+            Body body = new Body();
+            mainPart.Document.Append(body); // 正確附加 Body
+
+            // 添加標題
+            //AddParagraph(body, "系統資訊報告", true, 18, JustificationValues.Center);
+
+            // 1. 作業系統版本
+            AddParagraph(body, "1.作業系統版本", true, 14);
+            AddImageToWord(mainPart, body, "winver_screenshot.png");
+
+            // 2. 作業系統更新
+            AddParagraph(body, "2.作業系統更新", true, 14);
+            AddImageToWord(mainPart, body, "hotfix_screenshot.png");
+
+            // 3. 防毒軟體版本與掃毒
+            AddParagraph(body, "3.防毒軟體版本", true, 14);
+            AddParagraph(body, "4.防毒軟體病毒碼更新日期", true, 14);
+            AddParagraph(body, "5.防毒軟體全機完整掃毒", true, 14);
+            AddImageToWord(mainPart, body, "defender_screenshot.png");
+
+            // 6. MAC 位址
+            AddParagraph(body, "6.MAC位址", true, 14);
+            AddImageToWord(mainPart, body, "ipconfig_screenshot.png");
+
+            // 儲存文件
+            mainPart.Document.Save();
+        }
+
+        Console.WriteLine($"Word 文件已生成：{filePath}");
+    }
+
+    static void AddParagraph(Body body, string text, bool isBold = false, int fontSize = 12, JustificationValues? alignment = null)
+    {
+        Paragraph paragraph = new Paragraph();
+        Run run = new Run();
+        RunProperties runProps = new RunProperties();
+
+        if (isBold)
+        {
+            runProps.AppendChild(new Bold());
+        }
+
+        runProps.AppendChild(new FontSize() { Val = (fontSize * 2).ToString() });
+        run.AppendChild(runProps);
+        run.AppendChild(new Text(text));
+        paragraph.AppendChild(run);
+
+        // 設定對齊方式，若未指定則使用預設對齊方式
+        ParagraphProperties paragraphProps = new ParagraphProperties();
+        paragraphProps.AppendChild(new Justification() { Val = alignment ?? JustificationValues.Left });
+        paragraph.InsertAt(paragraphProps, 0);
+
+        body.AppendChild(paragraph);
+    }
+
+    static void AddImageToWord(MainDocumentPart mainPart, Body body, string imagePath)
+    {
+        if (!File.Exists(imagePath))
+        {
+            AddParagraph(body, $"未找到檔案：{imagePath}");
+            return;
+        }
+
+        ImagePart imagePart = mainPart.AddImagePart(ImagePartType.Png);
+        using (FileStream stream = new FileStream(imagePath, FileMode.Open))
+        {
+            imagePart.FeedData(stream);
+        }
+
+        AddImageToBody(mainPart.GetIdOfPart(imagePart), body);
+    }
+
+    static void AddImageToBody(string relationshipId, Body body)
+    {
+        Drawing drawing = new Drawing(
+            new DocumentFormat.OpenXml.Drawing.Wordprocessing.Inline(
+                new DocumentFormat.OpenXml.Drawing.Wordprocessing.Extent() { Cx = 990000L, Cy = 792000L },
+                new DocumentFormat.OpenXml.Drawing.Wordprocessing.EffectExtent()
+                {
+                    LeftEdge = 19050L,
+                    TopEdge = 0L,
+                    RightEdge = 19050L,
+                    BottomEdge = 0L
+                },
+                new DocumentFormat.OpenXml.Drawing.Wordprocessing.DocProperties()
+                {
+                    Id = (UInt32Value)1U,
+                    Name = "Picture 1"
+                },
+                new DocumentFormat.OpenXml.Drawing.Wordprocessing.NonVisualGraphicFrameDrawingProperties(
+                    new DocumentFormat.OpenXml.Drawing.GraphicFrameLocks() { NoChangeAspect = true }),
+                new DocumentFormat.OpenXml.Drawing.Graphic(
+                    new DocumentFormat.OpenXml.Drawing.GraphicData(
+                        new DocumentFormat.OpenXml.Drawing.Pictures.Picture(
+                            new DocumentFormat.OpenXml.Drawing.Pictures.NonVisualPictureProperties(
+                                new DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties()
+                                {
+                                    Id = (UInt32Value)0U,
+                                    Name = "New Bitmap Image.png"
+                                },
+                                new DocumentFormat.OpenXml.Drawing.Pictures.NonVisualPictureDrawingProperties()),
+                            new DocumentFormat.OpenXml.Drawing.Pictures.BlipFill(
+                                new DocumentFormat.OpenXml.Drawing.Blip() { Embed = relationshipId },
+                                new DocumentFormat.OpenXml.Drawing.Stretch(new DocumentFormat.OpenXml.Drawing.FillRectangle())),
+                            new DocumentFormat.OpenXml.Drawing.Pictures.ShapeProperties(
+                                new DocumentFormat.OpenXml.Drawing.Transform2D(
+                                    new DocumentFormat.OpenXml.Drawing.Offset() { X = 0L, Y = 0L },
+                                    new DocumentFormat.OpenXml.Drawing.Extents() { Cx = 990000L, Cy = 792000L }),
+                                new DocumentFormat.OpenXml.Drawing.PresetGeometry(
+                                    new DocumentFormat.OpenXml.Drawing.AdjustValueList()
+                                )
+                                { Preset = DocumentFormat.OpenXml.Drawing.ShapeTypeValues.Rectangle }))
+                    )
+                    { Uri = "http://schemas.openxmlformats.org/drawingml/2006/picture" }))
+            {
+                DistanceFromTop = (UInt32Value)0U,
+                DistanceFromBottom = (UInt32Value)0U,
+                DistanceFromLeft = (UInt32Value)0U,
+                DistanceFromRight = (UInt32Value)0U,
+                EditId = "50D07946"
+            });
+
+        Paragraph paragraph = new Paragraph(new Run(drawing));
+        body.AppendChild(paragraph);
     }
 }
