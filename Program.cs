@@ -293,20 +293,23 @@ class Program
 
     static void AddImageToBody(string relationshipId, Body body)
     {
+        long width = 6 * 914400; // 寬度設為 6 英寸（1 英寸 = 914400 單位）
+        long height = 4 * 914400; // 高度設為 4 英寸
+
         Drawing drawing = new Drawing(
             new DocumentFormat.OpenXml.Drawing.Wordprocessing.Inline(
-                new DocumentFormat.OpenXml.Drawing.Wordprocessing.Extent() { Cx = 990000L, Cy = 792000L },
+                new DocumentFormat.OpenXml.Drawing.Wordprocessing.Extent() { Cx = width, Cy = height }, // 圖片大小
                 new DocumentFormat.OpenXml.Drawing.Wordprocessing.EffectExtent()
                 {
-                    LeftEdge = 19050L,
+                    LeftEdge = 0L,
                     TopEdge = 0L,
-                    RightEdge = 19050L,
+                    RightEdge = 0L,
                     BottomEdge = 0L
                 },
                 new DocumentFormat.OpenXml.Drawing.Wordprocessing.DocProperties()
                 {
                     Id = (UInt32Value)1U,
-                    Name = "Picture 1"
+                    Name = "Picture"
                 },
                 new DocumentFormat.OpenXml.Drawing.Wordprocessing.NonVisualGraphicFrameDrawingProperties(
                     new DocumentFormat.OpenXml.Drawing.GraphicFrameLocks() { NoChangeAspect = true }),
@@ -317,7 +320,7 @@ class Program
                                 new DocumentFormat.OpenXml.Drawing.Pictures.NonVisualDrawingProperties()
                                 {
                                     Id = (UInt32Value)0U,
-                                    Name = "New Bitmap Image.png"
+                                    Name = "New Bitmap Image"
                                 },
                                 new DocumentFormat.OpenXml.Drawing.Pictures.NonVisualPictureDrawingProperties()),
                             new DocumentFormat.OpenXml.Drawing.Pictures.BlipFill(
@@ -326,7 +329,7 @@ class Program
                             new DocumentFormat.OpenXml.Drawing.Pictures.ShapeProperties(
                                 new DocumentFormat.OpenXml.Drawing.Transform2D(
                                     new DocumentFormat.OpenXml.Drawing.Offset() { X = 0L, Y = 0L },
-                                    new DocumentFormat.OpenXml.Drawing.Extents() { Cx = 990000L, Cy = 792000L }),
+                                    new DocumentFormat.OpenXml.Drawing.Extents() { Cx = width, Cy = height }),
                                 new DocumentFormat.OpenXml.Drawing.PresetGeometry(
                                     new DocumentFormat.OpenXml.Drawing.AdjustValueList()
                                 )
@@ -337,11 +340,11 @@ class Program
                 DistanceFromTop = (UInt32Value)0U,
                 DistanceFromBottom = (UInt32Value)0U,
                 DistanceFromLeft = (UInt32Value)0U,
-                DistanceFromRight = (UInt32Value)0U,
-                EditId = "50D07946"
+                DistanceFromRight = (UInt32Value)0U
             });
 
         Paragraph paragraph = new Paragraph(new Run(drawing));
         body.AppendChild(paragraph);
     }
+
 }
